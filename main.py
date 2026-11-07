@@ -1,4 +1,6 @@
 
+from datetime import datetime
+
 import heapq
 from itertools import count
 
@@ -51,6 +53,116 @@ def load_cabs():
 
 # Load cabs when the program starts
 cabs = load_cabs()
+
+def save_state():
+
+    print("DEBUG: save_state() was called!")
+
+    
+    state = {
+        "requests": [],
+        "cabs": []
+    }
+
+    # Save all waiting requests
+    for request in requests:
+        state["requests"].append({
+            "name": request.name,
+            "destination": request.destination,
+            "time_slot": request.time_slot,
+            "year": request.year,
+            "submitted_at": request.submitted_at.isoformat()
+        })
+
+    # Save the current status of every cab
+    for cab in cabs:
+        cab_data = {
+            "has_left": cab.has_left,
+            "passengers": []
+        }
+
+        for student in cab.passengers:
+            cab_data["passengers"].append({
+                "name": student.name,
+                "destination": student.destination,
+                "time_slot": student.time_slot,
+                "year": student.year,
+                "submitted_at": student.submitted_at.isoformat()
+            })
+
+        state["cabs"].append(cab_data)
+
+    with open("state.json", "w") as file:
+        json.dump(state, file, indent=4)
+
+    print("Application state saved.")
+
+
+def load_state():
+    global requests, priority_queues, sequence
+
+    try:
+        with open("state.json", "r") as file:
+            state = json.load(file)
+
+        # Reset the in-memory data
+        requests = []
+        priority_queues = {}
+        sequence = count()
+
+        # Restore waiting requests
+        for data in state["requests"]:
+            request = RideRequest(
+                data["name"],
+                data["destination"],
+                data["time_slot"],
+                data["year"]
+            )
+
+            request.submitted_at = datetime.fromisoformat(
+                data["submitted_at"]
+            )
+
+            requests.append(request)
+            add_to_priority_queue(request)
+
+        
+
+        # Restore cab status and passengers
+        if len(state["cabs"]) != len(cabs):
+            raise ValueError("Cab configuration does not match.")
+
+        for cab, cab_data in zip(cabs, state["cabs"]):
+            cab.has_left = cab_data["has_left"]
+            cab.passengers = []
+
+            for data in cab_data["passengers"]:
+                student = RideRequest(
+                    data["name"],
+                    data["destination"],
+                    data["time_slot"],
+                    data["year"]
+                )
+
+                student.submitted_at = datetime.fromisoformat(
+                    data["submitted_at"]
+                )
+
+                cab.passengers.append(student)
+
+        print("Previous application state loaded.")
+
+    except FileNotFoundError:
+        print("No previous state found. Starting fresh.")
+
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        print("Could not load saved state:", error)
+        print("Starting with a fresh application.")
+        requests = []
+        priority_queues = {}
+        sequence = count()
+
+load_state()
 
 
 # Take and validate a ride request
@@ -152,6 +264,9 @@ def main():
             request = get_ride_request()
             requests.append(request)
             add_to_priority_queue(request)
+
+            save_state()
+            
             print("\nRequest successfully added!")
 
         elif choice == "2":
@@ -303,9 +418,7 @@ def dispatch_cab():
         print(student.name, "| Year:", student.year)
 
 
-
-
-
+    save_state()
 
 
 # Start the program
