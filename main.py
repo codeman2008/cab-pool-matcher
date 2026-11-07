@@ -210,83 +210,100 @@ def find_matches():
                 print(student.name, "| Year:", student.year)
 
 
-
 def dispatch_cab():
 
     print("\n--- DISPATCH CAB ---")
 
-    # Find all cabs that have not left
-    open_cabs = []
+    # Ask user to select destination
+    print("1. Delhi")
+    print("2. Jaipur")
 
-    for cab in cabs:
-        if not cab.has_left:
-            open_cabs.append(cab)
+    destination_choice = input("Choose destination: ")
 
-    if len(open_cabs) == 0:
-        print("No open cabs available.")
+    if destination_choice == "1":
+        destination = "Delhi"
+    elif destination_choice == "2":
+        destination = "Jaipur"
+    else:
+        print("Invalid destination.")
         return
 
-    # Display available cabs
-    print("Available cabs:")
+    # Ask user to select time slot
+    print("\n1. Morning")
+    print("2. Afternoon")
+    print("3. Evening")
+    print("4. Night")
 
-    for i, cab in enumerate(open_cabs):
-        print(
-            i + 1, ".",
-            cab.driver,
-            "|", cab.destination,
-            "|", cab.time_slot,
-            "| Seats:", cab.seats
-        )
+    slots = {
+        "1": "Morning",
+        "2": "Afternoon",
+        "3": "Evening",
+        "4": "Night"
+    }
 
-    # Ask user to select a cab
-    while True:
-        try:
-            choice = int(input("Select cab number: "))
+    slot_choice = input("Choose time slot: ")
 
-            if 1 <= choice <= len(open_cabs):
-                break
+    if slot_choice not in slots:
+        print("Invalid time slot.")
+        return
 
-            print("Invalid cab number.")
+    time_slot = slots[slot_choice]
 
-        except ValueError:
-            print("Please enter a number.")
-
-    selected_cab = open_cabs[choice - 1]
-    key = (selected_cab.destination, selected_cab.time_slot)
+    # Find the priority queue for this trip
+    key = (destination, time_slot)
 
     if key not in priority_queues or not priority_queues[key]:
-        print("No students waiting for this destination and time slot.")
+        print("No students waiting for this trip.")
         return
 
+    # Find the first open cab for this trip
+    selected_cab = None
+
+    for cab in cabs:
+        if (not cab.has_left
+                and cab.destination == destination
+                and cab.time_slot == time_slot):
+            selected_cab = cab
+            break
+
+    if selected_cab is None:
+        print("No open cab available for this trip.")
+        return
+
+    # Select students according to priority
     selected_requests = []
 
-    while priority_queues[key] and len(selected_requests) < selected_cab.seats:
+    while (priority_queues[key]
+           and len(selected_requests) < selected_cab.seats):
+
         entry = heapq.heappop(priority_queues[key])
         selected_requests.append(entry[3])
 
-    # Assign passengers to cab
+    # Assign students to cab
     selected_cab.passengers.extend(selected_requests)
 
-    # Remove passengers from waiting list
+    # Remove dispatched students from waiting list
     for student in selected_requests:
         requests.remove(student)
-
-   
 
     # Mark cab as departed
     selected_cab.has_left = True
 
+    # Display dispatch information
     print("\nCab successfully dispatched!")
     print("Driver:", selected_cab.driver)
-    print("Passengers:", len(selected_cab.passengers), "/", selected_cab.seats)
+    print("Destination:", selected_cab.destination)
+    print("Time slot:", selected_cab.time_slot)
+    print("Passengers:", len(selected_cab.passengers),
+          "/", selected_cab.seats)
 
-    if len(selected_requests) == 0:
-        print("No matching students. Cab departed empty.")
-    else:
-        print("Students travelling:")
+    print("Students travelling:")
 
-        for student in selected_requests:
-            print(student.name, "| Year:", student.year)
+    for student in selected_requests:
+        print(student.name, "| Year:", student.year)
+
+
+
 
 
 
