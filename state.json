@@ -1,0 +1,32 @@
+{
+    "requests": [
+        {
+            "name": "Rahul",
+            "destination": "Delhi",
+            "time_slot": "Morning",
+            "year": 2,
+            "submitted_at": "2026-11-07T23:13:13.285923"
+        },
+        {
+            "name": "Aman",
+            "destination": "Delhi",
+            "time_slot": "Morning",
+            "year": 5,
+            "submitted_at": "2026-11-07T23:13:25.124138"
+        }
+    ],
+    "cabs": [
+        {
+            "has_left": false,
+            "passengers": []
+        },
+        {
+            "has_left": false,
+            "passengers": []
+        },
+        {
+            "has_left": false,
+            "passengers": []
+        }
+    ]
+}
