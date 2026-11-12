@@ -56,7 +56,7 @@ cabs = load_cabs()
 
 def save_state():
 
-    print("DEBUG: save_state() was called!")
+    
 
     
     state = {
